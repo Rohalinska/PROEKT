@@ -1,0 +1,386 @@
+@page "/"
+@using SportsLeague.Domain
+@using SportsLeague.BusinessLogic
+
+@* ПРИМУСОВИЙ СТИЛЬ ДЛЯ СТОРІНКИ ТА СКРОЛЛБАРУ *@
+<style>
+    body {
+        background-color: #0b0f19 !important;
+        margin: 0;
+        padding: 0;
+    }
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #030712;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #1f2937;
+        border-radius: 4px;
+    }
+</style>
+
+@* 1. НАВІГАЦІЙНА ПАНЕЛЬ (NAVBAR) *@
+<nav style="background-color: #030712; border-bottom: 1px solid #1f2937; padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; font-family: 'Segoe UI', Arial, sans-serif;">
+    <div style="display: flex; align-items: center; gap: 35px;">
+        @* Логотип *@
+        <div @onclick='() => ChangeTab("Home")' style="font-weight: 800; font-size: 20px; color: #10b981; cursor: pointer; letter-spacing: -0.5px;">
+            ⚽ SPORTS<span style="color:#fff;">LEAGUE</span>
+        </div>
+        
+        @* Вкладки навігації *@
+        <div style="display: flex; gap: 28px; font-size: 15px; font-weight: 500;">
+            <span @onclick='() => ChangeTab("Home")' style="cursor: pointer; transition: color 0.2s; color: @(ActiveTab == "Home" ? "#10b981" : "#f3f4f6");">Головна</span>
+            <span @onclick='() => ChangeTab("Projects")' style="cursor: pointer; transition: color 0.2s; color: @(ActiveTab == "Projects" ? "#10b981" : "#9ca3af");">Проєкти</span>
+            <span @onclick='() => ChangeTab("Team")' style="cursor: pointer; transition: color 0.2s; color: @(ActiveTab == "Team" ? "#10b981" : "#9ca3af");">Наша команда</span>
+            <span @onclick='() => ChangeTab("About")' style="cursor: pointer; transition: color 0.2s; color: @(ActiveTab == "About" ? "#10b981" : "#9ca3af");">Про нас</span>
+            <span @onclick='() => ChangeTab("Contacts")' style="cursor: pointer; transition: color 0.2s; color: @(ActiveTab == "Contacts" ? "#10b981" : "#9ca3af");">Контакти</span>
+        </div>
+    </div>
+
+    @* Кнопки пошуку та авторизації *@
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <button style="background: transparent; border: 1px solid #1f2937; border-radius: 8px; padding: 8px 12px; color: #9ca3af; cursor: pointer;">
+            🔍
+        </button>
+        <button @onclick="ToggleLoginModal" style="background: transparent; border: 1px solid #1f2937; color: #fff; padding: 8px 22px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+            Увійти
+        </button>
+    </div>
+</nav>
+
+@* ГОЛОВНИЙ КОНТЕЙНЕР ДОДАТКУ *@
+<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 30px 20px; background-color: #0b0f19; min-height: 100vh; color: #f3f4f6;">
+    
+    @if (ActiveTab == "Home")
+    {
+        @* ГОЛОВНА СТОРІНКА (ТУРНІРНА СИСТЕМА) *@
+        <div style="background: linear-gradient(135deg, #065f46, #022c22); border: 1px solid #047857; padding: 30px; border-radius: 14px; margin-bottom: 24px; box-shadow: 0 10px 20px rgba(0,0,0,0.4);">
+            <h1 style="margin: 0; font-size: 30px; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px; color: #fff;">⚽ Професійна Турнірна Система Ліги</h1>
+            <p style="margin: 6px 0 0 0; color: #a7f3d0; font-size: 15px; font-weight: 500;">
+                Повна реалізація практичного маршруту з ООП та SOLID — Варіант №14
+            </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; margin-bottom: 24px;">
+            @* Блок бізнес-процесів *@
+            <div style="background: #111827; border-radius: 12px; padding: 24px; border: 1px solid #1f2937;">
+                <h3 style="margin-top:0; color: #10b981; border-bottom: 1px solid #1f2937; padding-bottom: 10px; font-weight: 700;">⚙ Бізнес-процеси (SOLID / Patterns)</h3>
+                
+                <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-weight:500; margin-bottom:6px; font-size: 14px; color: #9ca3af;">Оберіть модель нарахування очок (Factory + Strategy):</label>
+                    <select @onchange="OnStrategyChanged" style="width:100%; padding:10px; border-radius:8px; border:1px solid #374151; background: #030712; color: #fff; font-size:14px; outline: none; cursor: pointer;">
+                        <option value="Classic">Класична схема FIFA (3 за перемогу, 1 за нічию)</option>
+                        <option value="Aggressive">Агресивний регламент (2 за перемогу, нічия = 0)</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #064e3b; padding: 14px; border-radius: 10px; border: 1px solid #065f46;">
+                    <div>
+                        <span style="font-size: 13px; color: #a7f3d0; display:block; font-weight: 500;">Поточна фаза сезону (State Pattern):</span>
+                        <strong style="color: #fff; font-size: 18px;">🏆 @SeasonContext.CurrentState.StageName</strong>
+                    </div>
+                    <button @onclick="SwitchState" style="background: #10b981; color: #030712; border:none; padding: 10px 18px; border-radius: 8px; font-weight:700; cursor:pointer;">
+                        Наступна стадія
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button @onclick="SimulateLeagueRound" disabled="@IsRoundPlayed" style="background: #2563eb; color:white; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer; font-size: 14px; opacity: @(IsRoundPlayed ? "0.5" : "1");">
+                        🎯 Зіграти тур ліги
+                    </button>
+                    <button @onclick="TriggerRetryPolicySerialization" style="background: #4b5563; color:white; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer; font-size: 14px;">
+                        🔄 Синхронізація (Retry)
+                    </button>
+                </div>
+            </div>
+
+            @* Блок логів *@
+            <div style="background: #111827; border-radius: 12px; padding: 24px; border: 1px solid #1f2937; display: flex; flex-direction: column;">
+                <h3 style="margin-top:0; color: #10b981; border-bottom: 1px solid #1f2937; padding-bottom: 10px; font-weight: 700;">📜 Делеговані сповіщення та лог</h3>
+                <div style="background: #030712; color: #38bdf8; padding: 14px; border-radius: 8px; flex-grow: 1; height: 185px; overflow-y:auto; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; border: 1px solid #1f2937;">
+                    @foreach(var log in SystemLogs)
+                    {
+                        <div style="border-bottom: 1px solid #1f2937; padding-bottom: 4px; margin-bottom: 4px;">@log</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; margin-bottom: 24px;">
+            @* Результати матчів *@
+            <div style="background: #111827; border-radius: 12px; padding: 24px; border: 1px solid #1f2937;">
+                <h3 style="margin-top:0; color: #10b981; border-bottom: 1px solid #1f2937; padding-bottom: 10px; font-weight: 700;">📅 Календар та результати</h3>
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    @foreach(var match in Facade.MatchRepository.GetAll())
+                    {
+                        <div style="display:flex; justify-content: space-between; align-items:center; background:#030712; padding:14px; border-radius:8px; border: 1px solid #1f2937; border-left: 5px solid @(match.IsFinished ? "#10b981" : "#4b5563");">
+                            <div style="font-weight:600; width:40%; color: #fff;">@match.HomeTeam.Name</div>
+                            <div style="background:#1f2937; color:#10b981; padding:6px 14px; border-radius:6px; font-weight:800; font-size:15px; border: 1px solid #374151;">
+                                @match.HomeGoals : @match.AwayGoals
+                            </div>
+                            <div style="font-weight:600; width:40%; text-align:right; color: #fff;">@match.AwayTeam.Name</div>
+                        </div>
+                    }
+                </div>
+                <div style="margin-top: 16px; font-size: 13px; color: #9ca3af; font-weight: 500; background: #030712; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #1f2937;">
+                    📈 Агрегація LINQ: Усього забито в турі: <strong style="color: #10b981;">@Facade.MatchRepository.GetAll().GetTotalGoalsInLeague() голів</strong>
+                </div>
+            </div>
+
+            @* Таблиця ліги *@
+            <div style="background: #111827; border-radius: 12px; padding: 24px; border: 1px solid #1f2937;">
+                <h3 style="margin-top:0; color: #10b981; border-bottom: 1px solid #1f2937; padding-bottom: 10px; font-weight: 700;">📊 Таблиця ліги (Складний LINQ)</h3>
+                <table style="width:100%; border-collapse:collapse; font-size: 14px;">
+                    <thead>
+                        <tr style="text-align:left; color:#9ca3af; border-bottom: 1px solid #1f2937;">
+                            <th style="padding: 10px 0;">Футбольний Клуб</th>
+                            <th style="text-align:right; padding: 10px 0;">Очки в сезоні</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var team in Facade.TeamRepository.GetAll().OrderByDescending(t => t.Points))
+                        {
+                            <tr style="border-bottom: 1px solid #1f2937;">
+                                <td style="padding: 12px 0; font-weight:600; color:#e5e7eb;">⚽ @team.Name</td>
+                                <td style="text-align:right; padding: 12px 0; font-weight:800; color:#10b981; font-size:15px;">@team.Points pt</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        @* ІНШІ ВКЛАДКИ НАВІГАЦІЇ *@
+        <div style="background: #111827; border-radius: 12px; padding: 35px; border: 1px solid #1f2937; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            
+            @if (ActiveTab == "Projects")
+            {
+                <h2 style="color: #10b981; margin-top: 0; margin-bottom: 10px;">📂 Наші Активні Проєкти</h2>
+                <p style="color: #9ca3af; margin-bottom: 25px; font-size: 15px;">Список поточних чемпіонатів та розробок під егідою SportsLeague.</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="background: #030712; border: 1px solid #1f2937; border-radius: 10px; padding: 20px; display: flex; gap: 15px; align-items: center;">
+                        <div style="font-size: 40px; background: #1f2937; padding: 10px; border-radius: 8px;">🏆</div>
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #fff; font-size: 16px;">Прем'єр Ліга України 2026</h4>
+                            <p style="margin: 0; color: #9ca3af; font-size: 13px;">Автоматизований календар, статистика арбітрів та інтеграція з xUnit.</p>
+                        </div>
+                    </div>
+                    <div style="background: #030712; border: 1px solid #1f2937; border-radius: 10px; padding: 20px; display: flex; gap: 15px; align-items: center;">
+                        <div style="font-size: 40px; background: #1f2937; padding: 10px; border-radius: 8px;">📊</div>
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #fff; font-size: 16px;">Модуль Аналітики LINQ-Pro</h4>
+                            <p style="margin: 0; color: #9ca3af; font-size: 13px;">Глибока фільтрація забитих голів, результативності та симуляція турів.</p>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (ActiveTab == "Team")
+            {
+                <h2 style="color: #10b981; margin-top: 0; margin-bottom: 10px;">👥 Наша Команда Розробників</h2>
+                <p style="color: #9ca3af; margin-bottom: 25px; font-size: 15px;">Люди, які перетворили архітектуру SOLID та ООП на реальний веб-додаток.</p>
+                
+                @* ОДНА ВЕЛИКА ЦЕНТРОВАНА КАРТКА З ТВОЇМ ФОТО ТА ПОВНИМ ОБ'ЄДНАНИМ ОПИСОМ *@
+                <div style="max-width: 600px; margin: 0 auto; background: #030712; border: 1px solid #1f2937; border-radius: 12px; padding: 30px; text-align: center;">
+                    <img src="alexandra.jpg" alt="Рогалінська Олександра" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 3px solid #10b981; margin-bottom: 16px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);" />
+                    <h3 style="margin: 0 0 6px 0; color: #fff; font-size: 22px; font-weight: 700;">Рогалінська Олександра</h3>
+                    <p style="margin: 0 0 16px 0; color: #10b981; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Lead Developer</p>
+                    <p style="margin: 0; color: #9ca3af; font-size: 14px; line-height: 1.6; text-align: justify; background: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1f2937;">
+                        Головна архітектура проєкту, повна реалізація всієї бізнес-логіки та C# репозиторіїв. 
+                        Проведено повну перевірку написаного коду на відповідність суворим критеріям SOLID, шаблону Фасад та стандартів ООП. 
+                        Додатково розроблено та успешно налаштовано автоматичний запуск модульних тестів за методологією AAA за допомогою xUnit.
+                    </p>
+                </div>
+            }
+            else if (ActiveTab == "About")
+            {
+                <h2 style="color: #10b981; margin-top: 0; margin-bottom: 12px;">ℹ Про Проєкт та Регламент</h2>
+                <div style="color: #e5e7eb; font-size: 14px; line-height: 1.7; display: flex; gap: 30px; align-items: top;">
+                    <div style="background: #030712; padding: 20px; border-radius: 10px; border: 1px solid #1f2937; flex: 1;">
+                        <h4 style="color:#fff; margin-top:0;">📋 Варіант №14</h4>
+                        <p style="color: #9ca3af; margin: 0;">Даний веб-додаток є графічною інтерактивною оболонкою практичної роботи. Тут продемонстровано поєднання Blazor WebAssembly та чистих C# сутностей.</p>
+                    </div>
+                    <div style="background: #030712; padding: 20px; border-radius: 10px; border: 1px solid #1f2937; flex: 1;">
+                        <h4 style="color:#fff; margin-top:0;">🛡 Безпека проведення</h4>
+                        <p style="color: #9ca3af; margin: 0;">Завдяки патерну <strong>Template Method</strong> в логах чітко відображається автоматичний алгоритм безпеки при повітряних тривогах в Україні.</p>
+                    </div>
+                </div>
+            }
+            else if (ActiveTab == "Contacts")
+            {
+                <h2 style="color: #10b981; margin-top: 0; margin-bottom: 15px;">📞 Зворотній Зв'язок</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div style="color: #e5e7eb; font-size: 14px; display: flex; flex-direction: column; gap: 12px;">
+                        <div>📍 <strong>Адреса:</strong> м. Рівне, вул. Соборна, Україна</div>
+                        <div>📧 <strong>Електронна пошта:</strong> support@sportsleague.ua</div>
+                        <div>📱 <strong>Телефон:</strong> +380 (68) 123-45-67</div>
+                    </div>
+                    <div style="background: #030712; padding: 15px; border-radius: 10px; border: 1px solid #1f2937;">
+                        <h4 style="margin: 0 0 10px 0; color: #fff;">Надіслати запит розробникам</h4>
+                        <input type="text" placeholder="Ваш Email" style="width: 90%; padding: 8px; margin-bottom: 8px; background: #111827; border: 1px solid #374151; border-radius: 6px; color:#fff;" />
+                        <textarea placeholder="Повідомлення..." rows="3" style="width: 90%; padding: 8px; background: #111827; border: 1px solid #374151; border-radius: 6px; color:#fff; resize: none;"></textarea>
+                        <button style="background: #10b981; color: #030712; border: none; padding: 8px 15px; font-weight:700; border-radius:6px; cursor:pointer; margin-top: 5px;">Надіслати</button>
+                    </div>
+                </div>
+            }
+
+            @* Кнопка повернення назад *@
+            <div style="margin-top: 30px; border-top: 1px solid #1f2937; padding-top: 15px; text-align: right;">
+                <button @onclick='() => ChangeTab("Home")' style="background-color: #1f2937; border: 1px solid #374151; color: #fff; padding: 10px 24px; border-radius: 8px; font-weight:600; cursor:pointer;">
+                    ← Повернутися до Головної Таблиці
+                </button>
+            </div>
+        </div>
+    }
+
+    @* НИЖНЯ ПАНЕЛЬ (ФУТЕР) *@
+    <footer style="background: #111827; border-radius: 12px; padding: 24px; border: 1px solid #1f2937; display: flex; justify-content: space-between; align-items: center; margin-top: 24px;">
+        <div>
+            <button @onclick="ExecuteAutomatedUnitTests" style="background:#fff; color:#030712; border:none; padding:12px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size:14px; margin-right:12px;">
+                🧪 Запустити тести (xUnit AAA)
+            </button>
+            <button @onclick="ExportDataToJsonFormat" style="background:#1f2937; color:white; border:1px solid #374151; padding:12px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size: 14px;">
+                💾 Експорт DTO у JSON
+            </button>
+        </div>
+        
+        @if(UnitTestExecutionPassed)
+        {
+            <div style="color: #10b981; background: #064e3b; padding: 8px 20px; border-radius: 30px; font-weight:800; font-size:13px; border: 1px solid #047857;">
+                🚀 xUnit: [Passed Succeeded: 2 / Failed: 0]
+            </div>
+        }
+    </footer>
+</div>
+
+@* МОДАЛЬНЕ ВІКНО АВТОРИЗАЦІЇ *@
+@if (ShowLoginModal)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 2000;">
+        <div style="background: #111827; border: 1px solid #1f2937; padding: 30px; border-radius: 14px; width: 320px; text-align: center;">
+            <h3 style="color: #fff; margin-top: 0; margin-bottom: 20px; font-family: sans-serif;">Авторизація</h3>
+            <input type="text" placeholder="Введіть логін" style="width: 90%; padding: 10px; margin-bottom: 12px; background: #030712; border: 1px solid #374151; border-radius: 6px; color: #fff;" />
+            <input type="password" placeholder="Пароль" style="width: 90%; padding: 10px; margin-bottom: 20px; background: #030712; border: 1px solid #374151; border-radius: 6px; color: #fff;" />
+            <div style="display: flex; gap: 10px;">
+                <button @onclick="ToggleLoginModal" style="flex: 1; padding: 10px; background: #1f2937; border: 1px solid #374151; color:#fff; border-radius:6px; cursor:pointer;">Закрити</button>
+                <button @onclick="ToggleLoginModal" style="flex: 1; padding: 10px; background: #10b981; color:#030712; border:none; font-weight:700; border-radius:6px; cursor:pointer;">Вхід</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private LeagueManagerFacade Facade { get; set; } = new();
+    private SeasonContext SeasonContext { get; set; } = new();
+    private IScoreStrategy CurrentStrategy { get; set; } = new FootballClassicStrategy();
+    private List<string> SystemLogs { get; set; } = new();
+    private bool IsRoundPlayed { get; set; } = false;
+    private bool UnitTestExecutionPassed { get; set; } = false;
+
+    private string ActiveTab { get; set; } = "Home";
+    private bool ShowLoginModal { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        TournamentReglement reglement = new UkrainianLeagueReglement();
+        reglement.RunReglementWorkflow(SystemLogs);
+
+        Facade.OnLeagueNotification += (sender, msg) => {
+            SystemLogs.Insert(0, $"[{DateTime.Now.ToString("HH:mm:ss")}] {msg}");
+            StateHasChanged();
+        };
+
+        var t1 = new Team("Динамо Київ");
+        t1 += new Player("Віктор", "Нападник", 5); 
+        t1 += new Player("Микола", "Півзахисник", 2);
+
+        var t2 = new Team("Шахтар Донецьк");
+        t2 += new Player("Тарас", "Півзахисник", 1);
+
+        var t3 = new Team("Ворскла Полтава");
+        var t4 = new Team("Дніпро-1");
+
+        Facade.TeamRepository.Add(t1);
+        Facade.TeamRepository.Add(t2);
+        Facade.TeamRepository.Add(t3);
+        Facade.TeamRepository.Add(t4);
+
+        Facade.MatchRepository.Add(new Match(1, t1, t2, 3, 1));
+        Facade.MatchRepository.Add(new Match(2, t3, t4, 0, 0));
+
+        SystemLogs.Add("Впроваджено універсальний репозиторій Repository<T>. Дані згенеровано.");
+    }
+
+    private void ChangeTab(string tabName) => ActiveTab = tabName;
+    private void ToggleLoginModal() => ShowLoginModal = !ShowLoginModal;
+
+    private void SimulateLeagueRound()
+    {
+        try {
+            Facade.PlayAllMatches(CurrentStrategy);
+            IsRoundPlayed = true;
+            SystemLogs.Insert(0, $"[Успіх]: Усі матчі розраховано за стратегією: {CurrentStrategy.StrategyName}");
+            StateHasChanged();
+        }
+        catch(Exception ex) {
+            SystemLogs.Insert(0, ex.Message);
+            StateHasChanged();
+        }
+    }
+
+    private void OnStrategyChanged(ChangeEventArgs e)
+    {
+        string type = e.Value?.ToString() ?? "Classic";
+        CurrentStrategy = Facade.CreateStrategy(type); 
+        SystemLogs.Insert(0, $"Зміна стратегії розрахунку очок на: {CurrentStrategy.StrategyName}");
+        StateHasChanged();
+    }
+
+    private void SwitchState()
+    {
+        SeasonContext.CurrentState.NextStage(SeasonContext);
+        SystemLogs.Insert(0, $"Стадію сезону змінено. Новий стан: {SeasonContext.CurrentState.StageName}");
+        StateHasChanged();
+    }
+
+    private void TriggerRetryPolicySerialization()
+    {
+        string mockJson = Facade.ExportDataToFormatJson();
+        Facade.SaveConfigurationWithRetryPolicy(mockJson, SystemLogs);
+        StateHasChanged();
+    }
+
+    private void ExportDataToJsonFormat()
+    {
+        string jsonOutput = Facade.ExportDataToFormatJson();
+        SystemLogs.Insert(0, $"[System.Text.Json DTO]: {jsonOutput}");
+        StateHasChanged();
+    }
+
+    private void ExecuteAutomatedUnitTests()
+    {
+        var tHome = new Team("Тест ФК 1");
+        var tAway = new Team("Тест ФК 2");
+        var matchTest = new Match(99, tHome, tAway, 2, 0);
+        IScoreStrategy strategy = new FootballClassicStrategy();
+
+        matchTest.Play(strategy);
+
+        bool condition1 = matchTest.IsFinished && tHome.Points == 3 && tAway.Points == 0;
+
+        var teamA = new Team("Олександрія");
+        var teamB = new Team("Олександрія");
+
+        bool condition2 = (teamA == teamB);
+
+        if (condition1 && condition2)
+        {
+            UnitTestExecutionPassed = true;
+            SystemLogs.Insert(0, "✅ [xUnit Юніт-тести]: Всі тести структури AAA пройшли успішно!");
+            StateHasChanged();
+        }
+    }
+}

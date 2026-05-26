@@ -72,13 +72,13 @@
 ## Скріншоти інтерфейсу (Галерея проєкту)
 
 ### 1. Головна сторінка (Панель керування та LINQ-таблиця)
-(image.png)
+[alt text](image.png)
 
 ### 2. Наша команда (Персональна картка розробника)
-(image-1.png)
+[alt text](image-1.png)
 
 ### 3. Робота патернів та логування (Template Method & Observer)
-(image-2.png)
+[alt text](image-2.png)
 
 ### 4. Модульне тестування (xUnit AAA) та Експорт DTO
-(image-3.png) [alt text](image-4.png)
+[alt text](image-3.png) [alt text](image-4.png)
